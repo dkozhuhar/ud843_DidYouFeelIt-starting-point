@@ -15,9 +15,12 @@
  */
 package com.example.android.didyoufeelit;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
+
+import java.net.URL;
 
 /**
  * Displays the perceived strength of a single earthquake event based on responses from people who
@@ -35,10 +38,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Perform the HTTP request for earthquake data and process the response.
-        Event earthquake = Utils.fetchEarthquakeData(USGS_REQUEST_URL);
+        new NetworkingTask().execute(USGS_REQUEST_URL);
 
         // Update the information displayed to the user.
-        updateUi(earthquake);
+        //updateUi(earthquake);
     }
 
     /**
@@ -53,5 +56,24 @@ public class MainActivity extends AppCompatActivity {
 
         TextView magnitudeTextView = (TextView) findViewById(R.id.perceived_magnitude);
         magnitudeTextView.setText(earthquake.perceivedStrength);
+    }
+    private class NetworkingTask extends AsyncTask<String, Void, Event> {
+        @Override
+        protected Event doInBackground(String... urls) {
+            // Don't perform the request if there are no URLs, or the first URL is null.
+            if (urls.length < 1 || urls[0] == null) {
+                return null;
+            }
+            return Utils.fetchEarthquakeData(urls[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Event event) {
+            super.onPostExecute(event);
+            if (event == null) {
+                return;
+            }
+            updateUi(event);
+        }
     }
 }
